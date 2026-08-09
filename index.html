@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Owlet — look &amp; feel prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Nunito+Sans:wght@400;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --dusk:#1E1B3A;
+  --dusk-lift:#2C2752;
+  --dusk-deep:#151233;
+  --moon:#F6EDDA;
+  --moon-dim:#B7AEC4;
+  --bark:#4A3428;
+  --bark-light:#6B4E3C;
+
+  --t1:#E2603C;
+  --t2:#F0B23E;
+  --t3:#3AA6A0;
+  --t4:#8163CE;
+
+  --correct:#4FA85E;
+  --wrong:#C4453A;
+
+  --owl-body:#8163CE;
+  --owl-belly:#F6EDDA;
+  --owl-beak:#F0B23E;
+  --owl-ring:#F0B23E;
+
+  --display:"Fraunces",Georgia,serif;
+  --body:"Nunito Sans",system-ui,-apple-system,sans-serif;
+  --num:"Space Grotesk","Nunito Sans",monospace;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#0E0C22;font-family:var(--body);color:var(--moon);-webkit-font-smoothing:antialiased}
+body{padding:20px 12px 60px;display:flex;flex-direction:column;align-items:center;gap:18px}
+
+/* ---------- prototype chrome (not product UI) ---------- */
+.chrome{width:100%;max-width:420px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.chrome button{
+  font-family:var(--body);font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  background:transparent;color:#6F6796;border:1px solid #2A2550;border-radius:999px;
+  padding:7px 13px;cursor:pointer;transition:.15s
+}
+.chrome button:hover{color:var(--moon-dim);border-color:#3D3670}
+.chrome button[aria-current="true"]{background:var(--moon);color:var(--dusk);border-color:var(--moon)}
+.chrome button:focus-visible{outline:2px solid var(--t2);outline-offset:2px}
+
+/* ---------- phone frame ---------- */
+.phone{
+  width:100%;max-width:390px;background:var(--dusk);border-radius:30px;
+  border:1px solid #332C60;overflow:hidden;position:relative;
+  min-height:720px;display:flex;flex-direction:column;
+  box-shadow:0 24px 60px rgba(0,0,0,.5)
+}
+.screen{display:none;flex-direction:column;flex:1}
+.screen.on{display:flex}
+
+/* ---------- branch header ---------- */
+.canopy{position:relative;padding:14px 20px 0;flex-shrink:0}
+.topbar{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--moon-dim);font-weight:600}
+.topbar .date{letter-spacing:.06em;text-transform:uppercase}
+.prog{display:flex;align-items:center;gap:8px}
+.prog-num{font-family:var(--num);font-size:12px;font-weight:700;color:var(--moon)}
+.prog-bar{width:64px;height:5px;background:#3A3268;border-radius:999px;overflow:hidden}
+.prog-fill{height:100%;background:var(--t2);border-radius:999px;transition:width .35s cubic-bezier(.4,0,.2,1)}
+
+.hello{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+.hello-owl{width:36px;flex-shrink:0}
+.hello-txt{flex:1;line-height:1.2}
+.hello-txt b{display:block;font-size:15.5px;font-weight:700}
+.hello-txt span{font-size:11.5px;color:var(--moon-dim);letter-spacing:.03em}
+.notyou{background:none;border:none;font-family:var(--body);font-size:11px;font-weight:700;
+  color:var(--moon-dim);text-decoration:underline;cursor:pointer;padding:4px;flex-shrink:0}
+.notyou:hover{color:var(--moon)}
+.notyou:focus-visible{outline:2px solid var(--t2);outline-offset:2px;border-radius:4px}
+
+.nav{display:flex;gap:10px;padding:0 20px 24px;flex-shrink:0}
+.nav button{
+  font-family:var(--body);font-size:15.5px;font-weight:700;border:none;border-radius:15px;
+  padding:15px 14px;cursor:pointer;transition:transform .1s,box-shadow .1s,opacity .15s
+}
+.nav .back{flex:0 0 104px;background:transparent;border:1.5px solid #3D3670;color:var(--moon-dim)}
+.nav .back:hover:not(:disabled){border-color:#5A5194;color:var(--moon)}
+.nav .next{flex:1;background:var(--moon);color:var(--dusk);box-shadow:0 4px 0 rgba(0,0,0,.3)}
+.nav .next:active:not(:disabled){transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.3)}
+.nav button:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
+.nav button:focus-visible{outline:3px solid var(--t2);outline-offset:3px}
+
+.perch{position:relative;height:184px;margin-top:6px}
+.branch{position:absolute;left:-12px;right:-12px;top:126px;height:auto}
+.owl-wrap{position:absolute;left:50%;transform:translateX(-50%);top:6px;width:150px}
+.owl-wrap.react-good{animation:ruffle .5s ease}
+.owl-wrap.react-bad{animation:sag .5s ease}
+@keyframes ruffle{
+  0%{transform:translateX(-50%) rotate(0)}
+  25%{transform:translateX(-50%) rotate(-5deg) translateY(-7px)}
+  55%{transform:translateX(-50%) rotate(4deg) translateY(-3px)}
+  100%{transform:translateX(-50%) rotate(0)}
+}
+@keyframes sag{
+  0%{transform:translateX(-50%) translateY(0)}
+  40%{transform:translateX(-50%) translateY(7px) scaleY(.96)}
+  100%{transform:translateX(-50%) translateY(0)}
+}
+.owl.blink .eyelid{transform:scaleY(1);transform-origin:center}
+
+/* ---------- question ---------- */
+.bubble{
+  margin:16px 20px 0;background:var(--moon);color:var(--dusk);
+  border-radius:20px;padding:18px 20px;position:relative;
+  font-family:var(--display);font-size:25px;line-height:1.22;font-weight:600;
+  font-variation-settings:"SOFT" 60,"WONK" 1;
+  box-shadow:0 6px 0 rgba(0,0,0,.22)
+}
+.bubble::before{
+  content:"";position:absolute;top:-11px;left:44px;
+  border-left:12px solid transparent;border-right:12px solid transparent;
+  border-bottom:12px solid var(--moon)
+}
+.cat{
+  display:inline-block;font-family:var(--body);font-size:10px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--bark-light);
+  margin-bottom:8px
+}
+
+.tiles{padding:16px 20px 16px;display:flex;flex-direction:column;gap:10px;margin-top:auto}
+.tile{
+  display:flex;align-items:center;gap:13px;width:100%;text-align:left;
+  border:none;border-radius:16px;padding:15px 16px;cursor:pointer;
+  font-family:var(--body);font-size:17px;font-weight:700;color:#fff;
+  box-shadow:0 5px 0 rgba(0,0,0,.28);transition:transform .1s,box-shadow .1s,opacity .2s
+}
+.tile:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(0,0,0,.28)}
+.tile:focus-visible{outline:3px solid var(--moon);outline-offset:3px}
+.tile .mk{flex-shrink:0;width:26px;height:26px}
+.tile .mk svg{width:100%;height:100%;fill:rgba(255,255,255,.92)}
+.tile:nth-child(1){background:var(--t1)}
+.tile:nth-child(2){background:var(--t2);color:#3A2408}
+.tile:nth-child(2) .mk svg{fill:rgba(58,36,8,.85)}
+.tile:nth-child(3){background:var(--t3)}
+.tile:nth-child(4){background:var(--t4)}
+.tiles.locked .tile{pointer-events:none;opacity:.32}
+.tiles.locked .tile.is-correct{opacity:1;background:var(--correct);color:#fff;outline:3px solid var(--moon)}
+.tiles.locked .tile.is-correct .mk svg{fill:#fff}
+.tiles.locked .tile.is-wrong{opacity:1;background:var(--wrong);color:#fff}
+.tiles.locked .tile.is-wrong .mk svg{fill:#fff}
+.tile .verdict{margin-left:auto;font-size:13px;font-weight:700;opacity:0;transition:opacity .2s}
+.tiles.locked .is-correct .verdict,.tiles.locked .is-wrong .verdict{opacity:1}
+
+/* ---------- generic ---------- */
+.scroll{flex:1;overflow-y:auto;padding:0 20px 28px}
+h2.big{
+  font-family:var(--display);font-size:30px;font-weight:600;line-height:1.1;
+  font-variation-settings:"SOFT" 60,"WONK" 1;margin-bottom:4px
+}
+.sub{color:var(--moon-dim);font-size:14px;margin-bottom:20px}
+.hdr{padding:20px 20px 0}
+.eyebrow{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t2);margin-bottom:9px}
+
+.scoreblock{text-align:center;padding:22px 0 18px}
+.scoreblock .n{font-family:var(--num);font-size:60px;font-weight:700;line-height:1;color:var(--t2)}
+.scoreblock .l{font-size:13px;color:var(--moon-dim);margin-top:5px}
+
+.card{background:var(--dusk-lift);border-radius:16px;padding:15px 16px;margin-bottom:10px}
+.card .q{font-family:var(--display);font-size:16px;font-weight:600;line-height:1.3;margin-bottom:11px;display:flex;gap:9px}
+.card .q .ix{color:var(--moon-dim);flex-shrink:0;font-family:var(--num);font-size:14px}
+.row{display:flex;align-items:center;gap:8px;font-size:13.5px;margin-bottom:5px}
+.dot{width:17px;height:17px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;font-size:11px;font-weight:700;color:#fff}
+.dot.ok{background:var(--correct)}
+.dot.no{background:var(--wrong)}
+.why{font-size:13px;line-height:1.5;color:var(--moon-dim);margin-top:10px;padding-top:10px;border-top:1px solid rgba(246,237,218,.1)}
+.byline{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:12px;font-weight:700;color:var(--t2)}
+.rare{font-size:12px;color:var(--t3);font-weight:700;margin-top:8px}
+
+.streak{
+  display:flex;align-items:center;gap:13px;background:linear-gradient(100deg,var(--t4),#5E44A0);
+  border-radius:16px;padding:15px 17px;margin-bottom:18px
+}
+.streak .fl{font-family:var(--num);font-size:31px;font-weight:700;line-height:1}
+.streak .tx{font-size:13.5px;line-height:1.35}
+
+/* ---------- standings ---------- */
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:14px 20px 12px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  flex-shrink:0;background:transparent;border:1px solid #3D3670;color:var(--moon-dim);
+  border-radius:999px;padding:8px 14px;font-size:12.5px;font-weight:700;font-family:var(--body);cursor:pointer
+}
+.tab[aria-selected="true"]{background:var(--t2);border-color:var(--t2);color:#3A2408}
+.tab:focus-visible{outline:2px solid var(--moon);outline-offset:2px}
+
+.lb{list-style:none}
+.lb li{
+  display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:14px;margin-bottom:6px;
+  background:var(--dusk-lift)
+}
+.lb li.me{background:var(--moon);color:var(--dusk)}
+.lb li.me .nm{color:var(--dusk)}
+.lb li.me .rk{color:var(--bark)}
+.rk{font-family:var(--num);font-size:15px;font-weight:700;width:22px;color:var(--moon-dim);flex-shrink:0}
+.mini{width:36px;height:36px;flex-shrink:0}
+.nm{font-size:15px;font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pt{font-family:var(--num);font-size:17px;font-weight:700}
+.crown{font-size:14px}
+
+/* ---------- nest / customizer ---------- */
+.preview{display:grid;place-items:center;padding:8px 0 14px}
+.swatches{margin-bottom:19px}
+.swlabel{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--moon-dim);margin-bottom:9px}
+.swrow{display:flex;gap:9px;flex-wrap:wrap}
+.sw{
+  width:40px;height:40px;border-radius:12px;border:3px solid transparent;cursor:pointer;
+  transition:transform .12s
+}
+.sw:hover{transform:scale(1.08)}
+.sw[aria-pressed="true"]{border-color:var(--moon)}
+.sw:focus-visible{outline:2px solid var(--t2);outline-offset:2px}
+
+/* ---------- email ---------- */
+.mailwrap{background:#DAD4E4;flex:1;padding:16px;overflow-y:auto}
+.mail{background:#fff;border-radius:12px;overflow:hidden;color:#2B2540;font-family:var(--body)}
+.mailhd{background:var(--dusk);padding:20px;text-align:center}
+.mailhd .brand{font-family:var(--display);font-size:21px;font-weight:700;color:var(--moon);font-variation-settings:"SOFT" 60,"WONK" 1}
+.mailbd{padding:20px}
+.mailbd p{font-size:15px;line-height:1.5;margin-bottom:14px}
+.cta{
+  display:block;background:var(--t1);color:#fff;text-decoration:none;text-align:center;
+  font-weight:700;font-size:17px;padding:16px;border-radius:12px;margin:4px 0 18px
+}
+.mini-lb{background:#F3F0F7;border-radius:10px;padding:13px 15px;margin-bottom:14px}
+.mini-lb h4{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#6A6084;margin-bottom:9px}
+.mini-lb div{display:flex;justify-content:space-between;font-size:14px;padding:3px 0}
+.mini-lb .you{font-weight:700;color:var(--t4)}
+.mailft{padding:14px 20px 20px;font-size:11.5px;color:#8880A0;text-align:center;line-height:1.5}
+
+.note{max-width:420px;font-size:12.5px;color:#6F6796;line-height:1.55;text-align:center}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important;transition:none !important}
+}
+</style>
+</head>
+<body>
+
+<nav class="chrome" id="chrome">
+  <button data-go="play" aria-current="true">Question</button>
+  <button data-go="reveal">Reveal</button>
+  <button data-go="stand">Standings</button>
+  <button data-go="nest">Your owl</button>
+  <button data-go="mail">Email</button>
+</nav>
+
+<div class="phone">
+
+  <!-- ============ PLAY ============ -->
+  <section class="screen on" id="s-play">
+    <div class="canopy">
+      <div class="hello">
+        <span class="hello-owl" id="hellowl"></span>
+        <span class="hello-txt"><b>Hello, Ray</b><span>Monday, August 10</span></span>
+        <button class="notyou">Not you?</button>
+      </div>
+      <div class="topbar" style="justify-content:flex-end">
+        <span class="prog"><span class="prog-num" id="pnum">1 of 5</span><span class="prog-bar"><span class="prog-fill" id="pfill" style="width:20%"></span></span></span>
+      </div>
+      <div class="perch">
+        <div class="owl-wrap" id="owlwrap"></div>
+        <svg class="branch" viewBox="0 0 420 60" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M0 26 C 90 16, 150 20, 210 21 C 280 22, 340 17, 420 27 L420 40 C 340 31, 280 36, 210 35 C 150 34, 90 31, 0 40 Z" fill="#4A3428"/>
+          <path d="M0 26 C 90 16, 150 20, 210 21 C 280 22, 340 17, 420 27 L420 31 C 340 21, 280 26, 210 25 C 150 24, 90 21, 0 30 Z" fill="#6B4E3C"/>
+          <path d="M96 27 C 76 12, 60 10, 50 16 C 62 26, 82 30, 96 27 Z" fill="#3AA6A0" opacity=".85"/>
+          <path d="M318 26 C 340 12, 358 12, 368 19 C 354 28, 334 30, 318 26 Z" fill="#3AA6A0" opacity=".85"/>
+          <path d="M286 27 C 300 15, 314 15, 320 20 C 310 27, 296 30, 286 27 Z" fill="#2F8B86" opacity=".8"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="bubble">
+      <span class="cat" id="qcat">Geography</span>
+      <div id="qtext">Which river runs through the Grand Canyon?</div>
+    </div>
+
+    <div class="tiles" id="tiles"></div>
+
+    <div class="nav">
+      <button class="back" id="btnBack">Back</button>
+      <button class="next" id="btnNext">Next</button>
+    </div>
+  </section>
+
+  <!-- ============ REVEAL ============ -->
+  <section class="screen" id="s-reveal">
+    <div class="hdr">
+      <div class="eyebrow">Monday · August 10</div>
+    </div>
+    <div class="scroll">
+      <div class="preview" style="padding:0 0 4px"><div id="revealowl" style="width:96px"></div></div>
+      <div class="scoreblock" style="padding-top:6px">
+        <div class="n">60</div>
+        <div class="l">of 75 points today · 4 of 5 correct</div>
+      </div>
+
+      <div class="streak">
+        <span class="fl">12</span>
+        <span class="tx">Twelve days in a row. Longest streak in the family right now.</span>
+      </div>
+
+      <div class="card">
+        <div class="q"><span class="ix">1</span><span>Which river runs through the Grand Canyon?</span></div>
+        <div class="row"><span class="dot ok">✓</span><span>Colorado River</span></div>
+        <div class="why">It carved the canyon over roughly six million years, cutting through rock nearly two billion years old at the bottom.</div>
+        <div class="rare">Only 2 of 7 got this one</div>
+      </div>
+
+      <div class="card">
+        <div class="q"><span class="ix">2</span><span>What year did Grandma and Grandpa get married?</span></div>
+        <div class="row"><span class="dot no">✕</span><span style="color:var(--moon-dim)">You said 1968</span></div>
+        <div class="row"><span class="dot ok">✓</span><span>1971</span></div>
+        <div class="why">Married in Superior on a Saturday in June, three weeks after Grandpa got back.</div>
+        <div class="byline"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 C7 8 6 16 8 22 L12 18 L16 22 C18 16 17 8 12 2 Z"/></svg>Submitted by Belle</div>
+      </div>
+
+      <div class="card">
+        <div class="q"><span class="ix">3</span><span>Which planet has the most moons?</span></div>
+        <div class="row"><span class="dot ok">✓</span><span>Saturn</span></div>
+        <div class="why">Saturn overtook Jupiter after a batch of small outer moons was confirmed in 2023.</div>
+      </div>
+
+      <div class="card">
+        <div class="q"><span class="ix">4</span><span>The Lewis and Clark expedition set out from near which modern city?</span></div>
+        <div class="row"><span class="dot ok">✓</span><span>St. Louis</span></div>
+        <div class="why">They wintered at Camp Dubois just across the Mississippi, then pushed up the Missouri in May 1804.</div>
+      </div>
+
+      <div class="card">
+        <div class="q"><span class="ix">5</span><span>Which instrument is a luthier trained to build?</span></div>
+        <div class="row"><span class="dot ok">✓</span><span>Guitar</span></div>
+        <div class="why">The word covers makers of any stringed instrument, and comes from the lute.</div>
+      </div>
+
+      <div class="eyebrow" style="margin:20px 0 10px">This week so far</div>
+      <ul class="lb">
+        <li><span class="rk">1</span><span class="mini" data-owl='{"body":"#3AA6A0","belly":"#F6EDDA","beak":"#F0B23E","ring":"#F0B23E"}'></span><span class="nm">Belle</span><span class="pt">310</span></li>
+        <li class="me"><span class="rk">2</span><span class="mini" data-owl='{"body":"#8163CE","belly":"#F6EDDA","beak":"#F0B23E","ring":"#F0B23E"}'></span><span class="nm">You</span><span class="pt">295</span></li>
+        <li><span class="rk">3</span><span class="mini" data-owl='{"body":"#E2603C","belly":"#F6EDDA","beak":"#F0B23E","ring":"#F6EDDA"}'></span><span class="nm">Dad</span><span class="pt">280</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ STANDINGS ============ -->
+  <section class="screen" id="s-stand">
+    <div class="hdr">
+      <div class="eyebrow">Rugg Family Trivia</div>
+      <h2 class="big">Standings</h2>
+      <div class="sub" id="lbsub">Week of August 10 · 4 days played</div>
+    </div>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" aria-selected="true" data-board="week">This week</button>
+      <button class="tab" role="tab" aria-selected="false" data-board="all">All time</button>
+      <button class="tab" role="tab" aria-selected="false" data-board="avg">Best average</button>
+      <button class="tab" role="tab" aria-selected="false" data-board="streak">Streak</button>
+    </div>
+    <div class="scroll"><ul class="lb" id="lb"></ul></div>
+  </section>
+
+  <!-- ============ NEST ============ -->
+  <section class="screen" id="s-nest">
+    <div class="hdr">
+      <div class="eyebrow">Your owl</div>
+      <h2 class="big">Make it yours</h2>
+      <div class="sub">This is how you'll show up on the branch.</div>
+    </div>
+    <div class="scroll">
+      <div class="preview"><div id="bigowl" style="width:172px"></div></div>
+      <div class="swatches">
+        <div class="swlabel">Feathers</div>
+        <div class="swrow" data-part="body">
+          <button class="sw" style="background:#8163CE" data-c="#8163CE" aria-pressed="true"></button>
+          <button class="sw" style="background:#3AA6A0" data-c="#3AA6A0" aria-pressed="false"></button>
+          <button class="sw" style="background:#E2603C" data-c="#E2603C" aria-pressed="false"></button>
+          <button class="sw" style="background:#C98A4B" data-c="#C98A4B" aria-pressed="false"></button>
+          <button class="sw" style="background:#5C7CC9" data-c="#5C7CC9" aria-pressed="false"></button>
+          <button class="sw" style="background:#7A6E96" data-c="#7A6E96" aria-pressed="false"></button>
+        </div>
+      </div>
+      <div class="swatches">
+        <div class="swlabel">Belly</div>
+        <div class="swrow" data-part="belly">
+          <button class="sw" style="background:#F6EDDA" data-c="#F6EDDA" aria-pressed="true"></button>
+          <button class="sw" style="background:#EBCBA0" data-c="#EBCBA0" aria-pressed="false"></button>
+          <button class="sw" style="background:#D9BFE4" data-c="#D9BFE4" aria-pressed="false"></button>
+          <button class="sw" style="background:#BFE0DC" data-c="#BFE0DC" aria-pressed="false"></button>
+        </div>
+      </div>
+      <div class="swatches">
+        <div class="swlabel">Beak</div>
+        <div class="swrow" data-part="beak">
+          <button class="sw" style="background:#F0B23E" data-c="#F0B23E" aria-pressed="true"></button>
+          <button class="sw" style="background:#E2603C" data-c="#E2603C" aria-pressed="false"></button>
+          <button class="sw" style="background:#F6EDDA" data-c="#F6EDDA" aria-pressed="false"></button>
+        </div>
+      </div>
+      <div class="swatches">
+        <div class="swlabel">Eye ring</div>
+        <div class="swrow" data-part="ring">
+          <button class="sw" style="background:#F0B23E" data-c="#F0B23E" aria-pressed="true"></button>
+          <button class="sw" style="background:#F6EDDA" data-c="#F6EDDA" aria-pressed="false"></button>
+          <button class="sw" style="background:#3AA6A0" data-c="#3AA6A0" aria-pressed="false"></button>
+          <button class="sw" style="background:#E2603C" data-c="#E2603C" aria-pressed="false"></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ EMAIL ============ -->
+  <section class="screen" id="s-mail">
+    <div class="mailwrap">
+      <div class="mail">
+        <div class="mailhd">
+          <div style="width:74px;margin:0 auto 8px" id="mailowl"></div>
+          <div class="brand">Owlet</div>
+        </div>
+        <div class="mailbd">
+          <p>Morning, Dad. Five new questions are waiting — geography, history, music, science, and one from the family.</p>
+          <a class="cta" href="#">Play today's trivia</a>
+          <div class="mini-lb">
+            <h4>Yesterday</h4>
+            <div><span>1. Belle</span><span>65</span></div>
+            <div><span>2. Sol</span><span>60</span></div>
+            <div class="you"><span>3. You</span><span>55</span></div>
+          </div>
+          <p style="font-size:14px;color:#6A6084;margin-bottom:0">You're on a 12-day streak — the longest in the family. Saturday is still open if you want to pick it up for half points.</p>
+        </div>
+        <div class="mailft">
+          Rugg Family Trivia · sent at 7:00 am<br>
+          Change your send time · Stop these emails
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<p class="note">Prototype only — the buttons above switch screens. Answer tiles on the Question screen actually work.</p>
+
+<script type="module">
+const DEF = {body:"#8163CE",belly:"#F6EDDA",beak:"#F0B23E",ring:"#F0B23E"};
+
+function owlSVG(c=DEF){
+  return `<svg viewBox="0 0 200 210" xmlns="http://www.w3.org/2000/svg" class="owl" aria-hidden="true" style="width:100%;height:auto;display:block">
+  <ellipse cx="100" cy="196" rx="46" ry="9" fill="#000" opacity=".2"/>
+  <path d="M62 40 C58 22 66 16 78 22 C84 26 88 34 89 42 Z" fill="${c.body}"/>
+  <path d="M138 40 C142 22 134 16 122 22 C116 26 112 34 111 42 Z" fill="${c.body}"/>
+  <path d="M100 26 C144 26 168 62 168 108 C168 152 140 184 100 184 C60 184 32 152 32 108 C32 62 56 26 100 26 Z" fill="${c.body}"/>
+  <path d="M100 96 C126 96 140 122 140 146 C140 170 122 184 100 184 C78 184 60 170 60 146 C60 122 74 96 100 96 Z" fill="${c.belly}" opacity=".95"/>
+  <path d="M36 96 C26 116 28 142 40 156 C48 142 48 116 44 98 Z" fill="${c.body}" opacity=".82"/>
+  <path d="M164 96 C174 116 172 142 160 156 C152 142 152 116 156 98 Z" fill="${c.body}" opacity=".82"/>
+  <circle cx="72" cy="86" r="30" fill="${c.ring}"/>
+  <circle cx="128" cy="86" r="30" fill="${c.ring}"/>
+  <circle cx="72" cy="86" r="21" fill="#1E1B3A"/>
+  <circle cx="128" cy="86" r="21" fill="#1E1B3A"/>
+  <circle cx="79" cy="79" r="7" fill="#fff"/>
+  <circle cx="135" cy="79" r="7" fill="#fff"/>
+  <circle cx="67" cy="93" r="3.4" fill="#fff" opacity=".6"/>
+  <circle cx="123" cy="93" r="3.4" fill="#fff" opacity=".6"/>
+  <path d="M100 104 L110 118 L100 130 L90 118 Z" fill="${c.beak}"/>
+  <path d="M100 104 L110 118 L100 122 Z" fill="#000" opacity=".12"/>
+  <path d="M84 184 C84 190 88 194 94 194 L82 194 C76 194 74 190 76 186 Z" fill="${c.beak}"/>
+  <path d="M116 184 C116 190 112 194 106 194 L118 194 C124 194 126 190 124 186 Z" fill="${c.beak}"/>
+</svg>`;
+}
+
+const MARK = {
+  feather:'<svg viewBox="0 0 24 24"><path d="M12 2 C7 8 6 16 8 22 L12 18 L16 22 C18 16 17 8 12 2 Z"/></svg>',
+  moon:'<svg viewBox="0 0 24 24"><path d="M17 3 A10 10 0 1 0 17 21 A8 8 0 1 1 17 3 Z"/></svg>',
+  acorn:'<svg viewBox="0 0 24 24"><path d="M12 2 C11 2 11 4 11 4 L13 4 C13 4 13 2 12 2 Z"/><path d="M4 9 C4 6 7.5 4 12 4 C16.5 4 20 6 20 9 C20 10 19 10.5 18 10.5 L6 10.5 C5 10.5 4 10 4 9 Z"/><path d="M6 12 C6 18 9 22 12 22 C15 22 18 18 18 12 Z"/></svg>',
+  star:'<svg viewBox="0 0 24 24"><path d="M12 2 L15 9 L22 9.5 L16.5 14 L18.5 21 L12 17 L5.5 21 L7.5 14 L2 9.5 L9 9 Z"/></svg>'
+};
+const ORDER = ["feather","moon","acorn","star"];
+
+const QS = [
+  {cat:"Geography", q:"Which river runs through the Grand Canyon?",
+   a:["Rio Grande","Colorado River","Snake River","Green River"], correct:1},
+  {cat:"Family", q:"What year did Grandma and Grandpa get married?",
+   a:["1968","1971","1974","1965"], correct:1},
+  {cat:"Science", q:"Which planet has the most confirmed moons?",
+   a:["Jupiter","Neptune","Saturn","Uranus"], correct:2},
+  {cat:"History", q:"The Lewis and Clark expedition set out from near which modern city?",
+   a:["St. Louis","Chicago","New Orleans","Omaha"], correct:0},
+  {cat:"Music", q:"Which instrument is a luthier trained to build?",
+   a:["Drums","Trumpet","Guitar","Piano"], correct:2}
+];
+
+let qi = 0, avatar = {...DEF};
+let answers = QS.map(()=> null);
+
+const $ = s => document.querySelector(s);
+const owlwrap = $("#owlwrap");
+
+function paintOwls(){
+  owlwrap.innerHTML = owlSVG(avatar);
+  $("#bigowl").innerHTML = owlSVG(avatar);
+  $("#revealowl").innerHTML = owlSVG(avatar);
+  $("#mailowl").innerHTML = owlSVG(avatar);
+  $("#hellowl").innerHTML = owlSVG(avatar);
+  document.querySelectorAll(".mini[data-owl]").forEach(el=>{
+    const d = JSON.parse(el.dataset.owl);
+    el.innerHTML = owlSVG(el.classList.contains("is-me") ? avatar : d);
+  });
+  document.querySelectorAll(".lb li.me .mini").forEach(el=>{ el.innerHTML = owlSVG(avatar); });
+}
+
+function markLocked(chosen){
+  const q = QS[qi], t = $("#tiles");
+  t.classList.add("locked");
+  t.querySelectorAll(".tile").forEach((b,i)=>{
+    if(i === q.correct){ b.classList.add("is-correct"); b.querySelector(".verdict").textContent = "Correct"; }
+    else if(i === chosen){ b.classList.add("is-wrong"); b.querySelector(".verdict").textContent = "Nope"; }
+  });
+}
+
+function renderQ(){
+  const q = QS[qi];
+  $("#qcat").textContent = q.cat;
+  $("#qtext").textContent = q.q;
+  $("#pnum").textContent = `${qi+1} of ${QS.length}`;
+  $("#pfill").style.width = `${(qi+1)/QS.length*100}%`;
+
+  const t = $("#tiles");
+  t.className = "tiles";
+  t.innerHTML = q.a.map((txt,i)=>
+    `<button class="tile" data-i="${i}"><span class="mk">${MARK[ORDER[i]]}</span><span>${txt}</span><span class="verdict"></span></button>`
+  ).join("");
+  t.querySelectorAll(".tile").forEach(b=> b.addEventListener("click", pick));
+
+  if(answers[qi] !== null) markLocked(answers[qi]);
+  syncNav();
+}
+
+function syncNav(){
+  const last = qi === QS.length - 1;
+  const answered = answers[qi] !== null;
+  $("#btnBack").disabled = qi === 0;
+  $("#btnNext").disabled = !answered;
+  $("#btnNext").textContent = last ? "See how you did" : "Next";
+}
+
+function pick(e){
+  if(answers[qi] !== null) return;
+  const chosen = +e.currentTarget.dataset.i;
+  answers[qi] = chosen;
+  markLocked(chosen);
+  const good = chosen === QS[qi].correct;
+  owlwrap.classList.add(good ? "react-good" : "react-bad");
+  setTimeout(()=> owlwrap.classList.remove("react-good","react-bad"), 600);
+  syncNav();
+}
+
+$("#btnBack").addEventListener("click", ()=>{
+  if(qi > 0){ qi--; renderQ(); }
+});
+$("#btnNext").addEventListener("click", ()=>{
+  if(answers[qi] === null) return;
+  if(qi < QS.length - 1){ qi++; renderQ(); }
+  else {
+    show("reveal");
+    setTimeout(()=>{ qi = 0; answers = QS.map(()=> null); renderQ(); }, 500);
+  }
+});
+
+const BOARDS = {
+  week:{sub:"Week of August 10 · 4 days played", unit:"", rows:[
+    ["Belle",310,"#3AA6A0"],["You",295,"#8163CE"],["Dad",280,"#E2603C"],
+    ["Sol",265,"#C98A4B"],["Uncle Rick",240,"#5C7CC9"],["Mom",205,"#7A6E96"],["Cousin Jo",180,"#3AA6A0"]]},
+  all:{sub:"Since March · never resets", unit:"", rows:[
+    ["Dad",8420,"#E2603C"],["Belle",8190,"#3AA6A0"],["You",7960,"#8163CE"],
+    ["Sol",7310,"#C98A4B"],["Mom",6880,"#7A6E96"],["Uncle Rick",5940,"#5C7CC9"],["Cousin Jo",3120,"#3AA6A0"]]},
+  avg:{sub:"Points per day played · 5 day minimum", unit:"", rows:[
+    ["Belle",58.5,"#3AA6A0"],["You",56.1,"#8163CE"],["Dad",54.0,"#E2603C"],
+    ["Mom",52.2,"#7A6E96"],["Sol",49.7,"#C98A4B"],["Uncle Rick",47.5,"#5C7CC9"],["Cousin Jo",44.6,"#3AA6A0"]]},
+  streak:{sub:"Consecutive days played", unit:" days", rows:[
+    ["You",12,"#8163CE"],["Dad",12,"#E2603C"],["Sol",9,"#C98A4B"],
+    ["Belle",6,"#3AA6A0"],["Mom",4,"#7A6E96"],["Cousin Jo",2,"#3AA6A0"],["Uncle Rick",1,"#5C7CC9"]]}
+};
+
+function renderBoard(key){
+  const b = BOARDS[key];
+  $("#lbsub").textContent = b.sub;
+  $("#lb").innerHTML = b.rows.map(([name,val,col],i)=>{
+    const me = name === "You";
+    const c = me ? avatar : {body:col,belly:"#F6EDDA",beak:"#F0B23E",ring:"#F0B23E"};
+    return `<li class="${me?"me":""}">
+      <span class="rk">${i+1}</span>
+      <span class="mini">${owlSVG(c)}</span>
+      <span class="nm">${name}${i===0?' <span class="crown">👑</span>':""}</span>
+      <span class="pt">${val}${b.unit}</span></li>`;
+  }).join("");
+}
+
+function show(id){
+  document.querySelectorAll(".screen").forEach(s=> s.classList.remove("on"));
+  $("#s-"+id).classList.add("on");
+  document.querySelectorAll("#chrome button").forEach(b=>
+    b.setAttribute("aria-current", b.dataset.go === id ? "true" : "false"));
+}
+
+document.querySelectorAll("#chrome button").forEach(b=>
+  b.addEventListener("click", ()=> show(b.dataset.go)));
+
+document.querySelectorAll(".tab").forEach(t=>
+  t.addEventListener("click", ()=>{
+    document.querySelectorAll(".tab").forEach(x=> x.setAttribute("aria-selected","false"));
+    t.setAttribute("aria-selected","true");
+    renderBoard(t.dataset.board);
+  }));
+
+document.querySelectorAll(".swrow").forEach(row=>{
+  const part = row.dataset.part;
+  row.querySelectorAll(".sw").forEach(sw=>
+    sw.addEventListener("click", ()=>{
+      row.querySelectorAll(".sw").forEach(x=> x.setAttribute("aria-pressed","false"));
+      sw.setAttribute("aria-pressed","true");
+      avatar[part] = sw.dataset.c;
+      paintOwls();
+      renderBoard(document.querySelector('.tab[aria-selected="true"]').dataset.board);
+    }));
+});
+
+paintOwls();
+renderQ();
+renderBoard("week");
+</script>
+</body>
+</html>
